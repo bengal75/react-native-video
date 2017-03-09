@@ -12,6 +12,7 @@ const {
   requireNativeComponent,
   NativeModules,
   View,
+  Image,
 } = ReactNative;
 
 const styles = StyleSheet.create({
@@ -24,6 +25,7 @@ export default class Video extends Component {
 
   constructor(props, context) {
     super(props, context);
+    this.state = {showPoster: true};
     this.seek = this.seek.bind(this);
     this.presentFullscreenPlayer = this.presentFullscreenPlayer.bind(this);
     this.dismissFullscreenPlayer = this.dismissFullscreenPlayer.bind(this);
@@ -89,6 +91,9 @@ export default class Video extends Component {
   }
 
   _onSeek(event) {
+    if (this.state.showPoster) {
+      this.setState({showPoster:false});
+    }
     if (this.props.onSeek) {
       this.props.onSeek(event.nativeEvent);
     }
@@ -143,6 +148,9 @@ export default class Video extends Component {
   }
 
   _onPlaybackRateChange(event) {
+    if (this.state.showPoster && (event.nativeEvent.playbackRate !== 0)) {
+      this.setState({showPoster:false});
+    }
     if (this.props.onPlaybackRateChange) {
       this.props.onPlaybackRateChange(event.nativeEvent);
     }
@@ -199,6 +207,30 @@ export default class Video extends Component {
       onPlaybackRateChange: this._onPlaybackRateChange,
     });
 
+    if (this.props.poster && this.state.showPoster) {
+      const posterStyle = {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        resizeMode: 'contain',
+      };
+
+      return (
+        <View style={nativeProps.style}>
+          <RCTVideo
+            ref={this._assignRoot}
+            {...nativeProps}
+          />
+          <Image
+            style={posterStyle}
+            source={{uri: this.props.poster}}
+          />
+        </View>
+      );
+    }
+
     return (
       <RCTVideo
         ref={this._assignRoot}
@@ -217,6 +249,7 @@ Video.propTypes = {
   /* Wrapper component */
   source: PropTypes.object,
   resizeMode: PropTypes.string,
+  poster: PropTypes.string,
   repeat: PropTypes.bool,
   paused: PropTypes.bool,
   muted: PropTypes.bool,
